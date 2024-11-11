@@ -6,9 +6,8 @@ import { checkAuthenticated, checkNotAuthenticated } from '../middleware/authMid
 
 const router = express.Router();
 
-// User registration route
 router.post('/register', async (req, res) => {
-  const { username, password,email,role } = req.body;
+  const { username, password, email, role } = req.body;
 
   try {
     // Check if the user already exists
@@ -16,19 +15,24 @@ router.post('/register', async (req, res) => {
     if (userExists) return res.status(400).json({ message: 'User already exists' });
 
     // Create a new user
-    const user = new User({ username, password,email,role });
+    const user = new User({ username, password, email, role });
     await user.save();
-    res.status(201).json({ message: 'User registered successfully' });
+
+    // Remove the password before sending the user data in the response
+    const userWithoutPassword = user.toObject();
+    delete userWithoutPassword.password;
+
+    res.status(201).json({ message: 'User registered successfully', status: true, user: userWithoutPassword });
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
   }
 });
 
-// User login route
 router.post('/login', async (req, res) => {
   const { username, password } = req.body;
 
   try {
+    // Find the user by username
     const user = await User.findOne({ username });
     if (!user) return res.status(400).json({ message: 'Invalid credentials' });
 
@@ -36,14 +40,18 @@ router.post('/login', async (req, res) => {
     const isMatch = await user.matchPassword(password);
     if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
 
+    // Remove the password before sending the user data in the response
+    const userWithoutPassword = user.toObject();
+    delete userWithoutPassword.password;
+
     // Create a JWT token
     const token = jwt.sign({ id: user._id }, 'your-secret-key', { expiresIn: '1d' });
-    res.json({ message: 'Login successful', token });
+
+    res.json({ message: 'Login successful', token, user: userWithoutPassword });
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
   }
 });
-
 // Protected route (Example: Dashboard) - This route requires authentication
 router.get('/dashboard', checkAuthenticated, (req, res) => {
   res.json({ message: 'Welcome to the dashboard', user: req.user });

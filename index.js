@@ -15,15 +15,15 @@ app.use(express.static('public'));
 
 // Session middleware
 app.use(session({
-  secret: 'your-secret-key', // Use a secure, unique key in production
+  secret: 'your-secret-key', 
   resave: false,
   saveUninitialized: true,
   store: MongoStore.create({
-    mongoUrl: 'mongodb://localhost:27017/your-database', // MongoDB connection URL
+    mongoUrl: 'mongodb://localhost:27017/your-database', 
     collectionName: 'sessions',
   }),
   cookie: {
-    maxAge: 1000 * 60 * 60 * 24, // 1 day
+    maxAge: 1000 * 60 * 60 * 24, 
   },
 }));
 
